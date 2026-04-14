@@ -104,3 +104,55 @@ CREATE TABLE IF NOT EXISTS order_item (
     FOREIGN KEY (order_id) REFERENCES orders(order_id),
     FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id)
 );
+-- =========================
+-- PAYMENT
+-- =========================
+CREATE TABLE IF NOT EXISTS payment (
+    payment_id SERIAL PRIMARY KEY,
+    order_id INT NOT NULL,
+    payment_date DATE DEFAULT CURRENT_DATE,
+    amount NUMERIC(10,2) CHECK (amount > 0),
+    method VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'Completed',
+
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+-- =========================
+-- INGREDIENT
+-- =========================
+CREATE TABLE IF NOT EXISTS ingredient (
+    ingredient_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    unit VARCHAR(20),
+    current_stock NUMERIC(10,2) CHECK (current_stock >= 0),
+    reorder_level NUMERIC(10,2) CHECK (reorder_level >= 0)
+);
+
+-- =========================
+-- MENU INGREDIENT (many-to-many)
+-- =========================
+CREATE TABLE IF NOT EXISTS menu_ingredient (
+    menu_item_id INT,
+    ingredient_id INT,
+    quantity_required NUMERIC(10,2) CHECK (quantity_required > 0),
+
+    PRIMARY KEY (menu_item_id, ingredient_id),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id),
+    FOREIGN KEY (ingredient_id) REFERENCES ingredient(ingredient_id)
+);
+
+-- =========================
+-- INVENTORY TRANSACTION
+-- =========================
+CREATE TABLE IF NOT EXISTS inventory_transaction (
+    transaction_id SERIAL PRIMARY KEY,
+    ingredient_id INT NOT NULL,
+    transaction_date DATE DEFAULT CURRENT_DATE,
+    quantity_change NUMERIC(10,2) NOT NULL,
+    transaction_type VARCHAR(50) NOT NULL,
+    reference_order_id INT,
+
+    FOREIGN KEY (ingredient_id) REFERENCES ingredient(ingredient_id),
+    FOREIGN KEY (reference_order_id) REFERENCES orders(order_id)
+);
